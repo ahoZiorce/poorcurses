@@ -1,3 +1,5 @@
+from copy import deepcopy as copy
+
 class Dyn:
   def __init__(self, def_list = [], fill_value = None):
     self.l = def_list
@@ -16,8 +18,8 @@ class Dyn:
         self.l[key] = item
       elif key > self.max:
         for i in range(key - self.max - 1):
-          self.l.append(self.fill_value)
-        self.l.append(item)
+          self.l.append(copy(self.fill_value))
+        self.l.append(copy(item))
         self.max = len(self.l) - 1
   
   def __delitem__(self, key):
@@ -34,12 +36,12 @@ class Dyn:
     return self.l.__iter__()
 
   def append(self, obj):
-    r = self.l.append(obj)
+    r = self.l.append(copy(obj))
     self.max += 1
     return r
 
   def pop(self, obj = None):
-    r = self.l.pop(obj)
+    r = self.l.pop(copy(obj))
     self.max = len(self.l) - 1
     return r
 
