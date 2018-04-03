@@ -18,6 +18,7 @@ class Dyn:
         self.l[key] = item
       elif key > self.max:
         for i in range(key - self.max - 1):
+          #print(str(self.l))
           self.l.append(copy(self.fill_value))
         self.l.append(copy(item))
         self.max = len(self.l) - 1
@@ -27,10 +28,10 @@ class Dyn:
     self.max -= 1
 
   def __str__(self):
-    return str(self.l)
+    return self.l.__str__()
 
   def __len__(self):
-    return len(self.l)
+    return self.l.__len__()
 
   def __iter__(self):
     return self.l.__iter__()
@@ -44,6 +45,12 @@ class Dyn:
     r = self.l.pop(copy(obj))
     self.max = len(self.l) - 1
     return r
+  
+  def exists(self, key):
+    if key >= 0 and key <= self.max:
+      return True
+    else:
+      return False
 
   def to_list(self):
     return self.l
