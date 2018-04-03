@@ -1,0 +1,2 @@
+class CursorOutOfBounds(Exception):
+  pass

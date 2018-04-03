@@ -6,44 +6,28 @@ if os.name == 'nt':
   from ctypes import windll, create_string_buffer
 
 from poorcurses.dyn import Dyn
+from poorcurses.exceptions import CursorOutOfBounds
 
 class Terminal:
   def __init__(self):
-    self.render_y = 0
-    self.render_x = 0
     self.bufferc_x = 0
     self.bufferc_y = 0
     self.initted = False
     self._nclear = False
-    self._maxy, self._maxx = self.getmaxyx()
     self.buffer = Dyn(fill_value = ' ')
   
-
   try:
     import tty, termios
   except ImportError:
-    # Probably Windows.
     try:
       import msvcrt
     except ImportError:
-      # FIXME what to do on other platforms?
-      # Just give up here.
       raise ImportError('getch not available')
     else:
       getch = msvcrt.getch
   else:
     def getch(self):
       import tty, termios
-      """getch() -> key character
-
-      Read a single keypress from stdin and return the resulting character. 
-      Nothing is echoed to the console. This call will block if a keypress 
-      is not already available, but will not wait for Enter to be pressed. 
-
-      If the pressed key was a modifier key, nothing will be detected; if
-      it were a special function key, it may return the first character of
-      of an escape sequence, leaving additional characters in the buffer.
-      """
       fd = sys.stdin.fileno()
       old_settings = termios.tcgetattr(fd)
       try:
@@ -54,23 +38,31 @@ class Terminal:
       return ch
 
   def initscr(self):
+    self._maxy, self._maxx = self.getmaxyx()
+    self.buffer[self._maxx * self._maxy] = ' '
     self.clear()
     self.initted = True
 
+  def endwin(self):
+    self.clear()
+
   def move(self, y, x):
-    self.bufferc_y = y
-    self.bufferc_x = x
+    real_y = y + 2
+    real_x = x + 1
+    if x > self._maxx - 2 or y > self._maxy:
+      raise CursorOutOfBounds("Fuck you")
+    elif x < 0 or y < 0:
+      raise CursorOutOfBounds("Fuck you")
+    self.bufferc_y = real_y
+    self.bufferc_x = real_x
   
   def addstr(self, text):
     for i in text:
       self.buffer[self.bufferc_y * self._maxx + self.bufferc_x] = i
       self.bufferc_x += 1
-    if self.bufferc_y < self.render_y:
-      self._nclear = True
 
   def render(self):
-    if True:
-      self.clear()
+    self.clear()
     for i in self.buffer:
       sys.stdout.write(str(i))
       self.bufferc_x += 0
@@ -110,22 +102,31 @@ class Terminal:
     self.render_y = 0
     os.system('cls' if os.name == 'nt' else 'clear')
 
-t = Terminal()
+"""t = Terminal()
 r = t.getch()
 print(r)
 t.getch()
 t.initscr()
-x = 4
-y = 4
+t.move(2, 9)
+t.addstr('LOL')
+t.render()
+
+text = 'Welcome to Poorcurses'
+t.move(int(t._maxy / 2),int(t._maxx / 2) - len(text))
+t.addstr(text)
+t.render()
+
+x = 0
+y = 0
 t.move(y, x)
 t.addstr('@')
 t.render()
 t.getch()
 while True:
+  c = t.getch()
   t.move(y, x)
   t.addstr(' ')
   t.render()
-  c = t.getch()
   if c == 's':
     y += 1
   elif c == 'z':
@@ -134,6 +135,10 @@ while True:
     x += 1
   elif c == 'q':
     x -= 1
+  elif c == 'p':
+    t.endwin()
+    print(str(x) + ' and ' + str(y))
+    sys.exit(0)
   t.move(y, x)
   t.addstr('@')
-  t.render()
+  t.render()"""
