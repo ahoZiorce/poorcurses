@@ -65,19 +65,18 @@ class Terminal:
     for i in text:
       self.buffer[self.bufferc_y * self._maxx + self.bufferc_x] = i
       self.bufferc_x += 1
-    if self.bufferc_x > self._maxx:
-      raise OSError
-    if self.bufferc_y <= self.render_y:
+    if self.bufferc_y < self.render_y:
       self._nclear = True
 
   def render(self):
-    if self._nclear:
+    if True:
       self.clear()
     for i in self.buffer:
       sys.stdout.write(str(i))
-      self.render_x += 1
-      if (self._maxx % self.render_x) == 0:
+      self.bufferc_x += 0
+      if (self._maxx % self.bufferc_x) == 0:
         sys.stdout.write('\n')
+    sys.stdout.write('\n')
     self._nclear = False
 
 
@@ -101,8 +100,8 @@ class Terminal:
       except OSError:
         try:
           maxx, maxy = os.get_terminal_size(1)
-        except OSError:
-          raise OSError
+        except OSError as e:
+          print(e)
       finally:
         return (maxy, maxx)
   
@@ -112,10 +111,29 @@ class Terminal:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 t = Terminal()
+r = t.getch()
+print(r)
+t.getch()
 t.initscr()
-t.move(0, 5)
-t.addstr("lol")
-t.move(1, 5)
-t.addstr("lol")
+x = 4
+y = 4
+t.move(y, x)
+t.addstr('@')
 t.render()
 t.getch()
+while True:
+  t.move(y, x)
+  t.addstr(' ')
+  t.render()
+  c = t.getch()
+  if c == 's':
+    y += 1
+  elif c == 'z':
+    y -= 1
+  elif c == 'd':
+    x += 1
+  elif c == 'q':
+    x -= 1
+  t.move(y, x)
+  t.addstr('@')
+  t.render()
