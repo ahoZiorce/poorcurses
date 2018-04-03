@@ -7,8 +7,9 @@ class Terminal:
     self.render_y = 0
     self.render_x = 0
     self._maxy, self._maxx = self.getmaxyx()
-    self.buffery = Dyn(fill_value = " ")
+    self.buffery = Dyn(fill_value = Dyn(fill_value = " "))
     self.buffery.append(Dyn(fill_value = " "))
+    self.buffery[5]
   
   def initscr(self):
     self.clear()

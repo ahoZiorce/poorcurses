@@ -34,10 +34,14 @@ class Dyn:
     return self.l.__iter__()
 
   def append(self, obj):
-    return self.l.append(obj)
+    r = self.l.append(obj)
+    self.max += 1
+    return r
 
   def pop(self, obj = None):
-    return self.l.pop(obj)
+    r = self.l.pop(obj)
+    self.max = len(self.l) - 1
+    return r
 
   def to_list(self):
     return self.l
