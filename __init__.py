@@ -1,33 +1,42 @@
 import os
 import sys
-import termios
-
-if os.name == 'nt':
-  from ctypes import windll, create_string_buffer
 
 from poorcurses.dyn import Dyn
+
 from poorcurses.exceptions import CursorOutOfBounds
+from poorcurses.exceptions import UnsuportedEnvironment
+
+try:
+  import tty
+  import termios
+  OSTYPE = 'unix'
+except ImportError:
+  try:
+    import msvcrt
+    import struct
+    from ctypes import windll
+    from ctypes import create_string_buffer
+    OSTYPE = 'nt'
+  except ImportError:
+    OSTYPE = 'unknown'
+    raise UnsuportedEnvironment('The current environment is not supported by this version of poorcurses, please check your os or your python version')
+
 
 class Terminal:
   def __init__(self):
     self.bufferc_x = 0
     self.bufferc_y = 0
-    self.initted = False
     self._nclear = False
     self.buffer = Dyn(fill_value = ' ')
   
-  try:
-    import tty, termios
-  except ImportError:
-    try:
-      import msvcrt
-    except ImportError:
-      raise ImportError('getch not available')
-    else:
-      getch = msvcrt.getch
-  else:
+  if OSTYPE == 'nt':
     def getch(self):
-      import tty, termios
+      res = str(msvcrt.getch())
+      res = res[:-1]
+      res = res[2:]
+      return res
+  elif OSTYPE == 'unix':
+    def getch(self):
       fd = sys.stdin.fileno()
       old_settings = termios.tcgetattr(fd)
       try:
@@ -50,9 +59,9 @@ class Terminal:
     real_y = y + 2
     real_x = x + 1
     if x > self._maxx - 2 or y > self._maxy:
-      raise CursorOutOfBounds("Fuck you")
+      raise CursorOutOfBounds('Fuck you')
     elif x < 0 or y < 0:
-      raise CursorOutOfBounds("Fuck you")
+      raise CursorOutOfBounds('Fuck you')
     self.bufferc_y = real_y
     self.bufferc_x = real_x
   
@@ -65,28 +74,24 @@ class Terminal:
     self.clear()
     for i in self.buffer:
       sys.stdout.write(str(i))
-      self.bufferc_x += 0
-      #if (self._maxx % self.bufferc_x) == 0:
-      #  sys.stdout.write('\n')
+      self.bufferc_x += 1
     sys.stdout.write('\n')
-    self._nclear = False
 
-
-  def getmaxyx(self):
-    if os.name == 'nt':
+  if OSTYPE == 'nt':
+    def getmaxyx(self):
       h = windll.kernel32.GetStdHandle(-12)
       csbi = create_string_buffer(22)
       res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
       if res:
-          import struct
           (bufx, bufy, curx, cury, wattr,
-          left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+          left, top, right, bottom, maxx, maxy) = struct.unpack('hhhhHhhhhhh', csbi.raw)
           sizex = right - left + 1
           sizey = bottom - top + 1
       else:
-          sizex, sizey = 80, 25 # can't determine actual size - return default values
+          sizex, sizey = 80, 25
       return (sizey, sizex)
-    else:
+  elif OSTYPE == 'unix':
+    def getmaxyx(self):
       try:
         maxx, maxy = os.get_terminal_size(0)
       except OSError:
@@ -97,10 +102,14 @@ class Terminal:
       finally:
         return (maxy, maxx)
   
-  def clear(self):
-    self.render_x = 0
-    self.render_y = 0
-    os.system('cls' if os.name == 'nt' else 'clear')
+  if OSTYPE == 'nt':
+    def clear(self):
+      os.system('cls')
+      sys.stdout.flush()
+  elif OSTYPE == 'unix':
+    def clear(self):
+      os.system('clear')
+      sys.stdout.flush()
 
 t = Terminal()
 r = t.getch()
@@ -116,8 +125,8 @@ t.move(int(t._maxy / 2),int(t._maxx / 2) - int(len(text) / 2))
 t.addstr(text)
 t.render()
 
-x = 3
-y = 3
+x = 0
+y = 0
 t.move(y, x)
 t.addstr('@')
 t.render()
