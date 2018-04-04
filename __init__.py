@@ -66,8 +66,8 @@ class Terminal:
     for i in self.buffer:
       sys.stdout.write(str(i))
       self.bufferc_x += 0
-      if (self._maxx % self.bufferc_x) == 0:
-        sys.stdout.write('\n')
+      #if (self._maxx % self.bufferc_x) == 0:
+      #  sys.stdout.write('\n')
     sys.stdout.write('\n')
     self._nclear = False
 
@@ -102,7 +102,7 @@ class Terminal:
     self.render_y = 0
     os.system('cls' if os.name == 'nt' else 'clear')
 
-"""t = Terminal()
+t = Terminal()
 r = t.getch()
 print(r)
 t.getch()
@@ -112,12 +112,12 @@ t.addstr('LOL')
 t.render()
 
 text = 'Welcome to Poorcurses'
-t.move(int(t._maxy / 2),int(t._maxx / 2) - len(text))
+t.move(int(t._maxy / 2),int(t._maxx / 2) - int(len(text) / 2))
 t.addstr(text)
 t.render()
 
-x = 0
-y = 0
+x = 3
+y = 3
 t.move(y, x)
 t.addstr('@')
 t.render()
@@ -141,4 +141,4 @@ while True:
     sys.exit(0)
   t.move(y, x)
   t.addstr('@')
-  t.render()"""
+  t.render()
